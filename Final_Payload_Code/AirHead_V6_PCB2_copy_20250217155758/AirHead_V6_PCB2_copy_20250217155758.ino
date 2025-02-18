@@ -22,18 +22,14 @@
 #define NO_ERROR_STC31_CO2 0
 
 // I2C  address On PCB #2
-// #define Oxygen_IICAddress 0x73 //(PCB)
-
-#define Oxygen_IICAddress ADDRESS_3 //I2C address for Protoboard
-// #define mainCO2_IICAddress 0x62 //(PCB)
-// #define BMP_ADDRESS_PCB 0x76 //(PCB)
+#define Oxygen_IICAddress 0x73
+#define mainCO2_IICAddress 0x62
+#define BMP_ADDRESS_PCB 0x76
 // backup CO2 sensor
-// #define STC31_C_I2C_ADDR_2C 0x29 //(PCB)
-#define STC31_C_I2C_ADDR_2C 0x2C //(Protoboard)
-
+#define STC31_C_I2C_ADDR_2C 0x29
 
 // I2C Address  used on Protoboard
-#define STC31_C_I2C_ADDR_2C 0x2C
+//#define STC31_C_I2C_ADDR_2C 0x2C
 
 
 SensirionI2cStc3x co2STC31Sensor;
@@ -115,14 +111,11 @@ void setup() {
     return;
   }
 
-
-
   // Every time we switch on of off, this line will indicate we are doing a new tdata recording.
   // Because the file exists and we are recording the new data
   dataFile.println("Starting new data recording.");
  
-  // if (!bmp.begin_I2C(BMP_ADDRESS_PCB)) {   // hardware I2C mode, can pass in address & alt Wire
-  if (!bmp.begin_I2C()) {
+  if (!bmp.begin_I2C(BMP_ADDRESS_PCB)) {   // hardware I2C mode, can pass in address & alt Wire
     Serial.println("Could not find a valid BMP3 sensor, check wiring!");
     dataFile.println(String(ID_BMP)+"E:"+ "Could not connect in setup." );
     errorPreassureBMP = true;
@@ -154,12 +147,9 @@ void setup() {
     Serial.print("STC31 Backup CO2 sensor is working !!");
   }
   Serial.println("productId:"+String(productId));
-
   delay(10);
-  
-  
 
-  errorCo2STC31 = co2STC31Sensor.setBinaryGas(17); 
+  errorCo2STC31 = co2STC31Sensor.setBinaryGas(19 ); 
   if (errorCo2STC31 != NO_ERROR_STC31_CO2) {
         Serial.print("STC31 Backup CO2: Error trying to execute setBinaryGas(): ");
         errorToString(errorCo2STC31, errorMessageCo2STC31, sizeof errorMessageCo2STC31);
@@ -189,12 +179,8 @@ void setup() {
       Serial.println(errorMessageCo2STC31);
       dataFile.println(String(ID_BACKUP_CO2)+"E:"+ errorMessageCo2STC31 );
   }
-
-  // co2STC31Sensor.forcedRecalibration(0.085);
  
-  if (co2MainSensor.begin(mainCO2_IICAddress) == false) //(PCB)
-    // if (co2MainSensor.begin() == false)//(Protoboard)
-
+  if (co2MainSensor.begin(mainCO2_IICAddress) == false)
   {
     Serial.println(F("Please check wiring. Co2 Sensor not detected."));
     dataFile.println(String(ID_MAIN_CO2)+"E:"+ "Could not connect in setup." );
@@ -212,6 +198,10 @@ void setup() {
   }
 
   Serial.println("SPIFFS memory connected , Oxygen sensor  and all I2c connect success !");
+  buzzerIt();
+  delay(1000);
+  buzzerIt();
+  delay(1000);
   buzzerIt();
   
 
@@ -281,10 +271,9 @@ void loop() {
   }
 
   // Write data to file
-  String newDataToLog= String(co2)+","+String(co2BackUpSTC31*10000)+","+String(oxygenData)+","+String(altitude)+","+String(pressure)+"!";
-  // multiplied backup co2 value by 10k to get value in ppm
+  String newDataToLog= String(co2)+","+String(co2BackUpSTC31)+","+String(oxygenData)+","+String(altitude)+","+String(pressure)+"!";
   // If the data is exactly same from previous time, we do not save it on file.
-  //if (!newDataToLog.equals(previousDataToLog)) {     commented comparison statement
+  if (!newDataToLog.equals(previousDataToLog)) {
     dataFile.print(String(timePassed)+","+newDataToLog);
     // Save to compare next time.
     previousDataToLog =newDataToLog;
@@ -292,7 +281,7 @@ void loop() {
 
     // How many entries we have made
     entriesMade++;
-  // }
+  }
 
   // We close the file just as extra caution, we want to make sure the data we saved in file is not lost
   // Every CLOSE_FILE_AFTER_ENTRIES entries, we save the file and reopen it for appending
@@ -322,7 +311,7 @@ void loop() {
 
 void buzzerIt() {
   digitalWrite(BUZZER,HIGH);
-  delay(100);
+  delay(500);
   digitalWrite(BUZZER,LOW);
   
 }
