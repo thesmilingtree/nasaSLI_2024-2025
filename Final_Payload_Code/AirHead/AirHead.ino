@@ -22,14 +22,18 @@
 #define NO_ERROR_STC31_CO2 0
 
 // I2C  address On PCB #2
-#define Oxygen_IICAddress 0x73
-#define mainCO2_IICAddress 0x62
-#define BMP_ADDRESS_PCB 0x76
-// backup CO2 sensor
-#define STC31_C_I2C_ADDR_2C 0x29
+// #define Oxygen_IICAddress 0x73  //PCB
+#define Oxygen_IICAddress ADDRESS_3 // Protoboard
 
-// I2C Address  used on Protoboard
-//#define STC31_C_I2C_ADDR_2C 0x2C
+// #define mainCO2_IICAddress 0x62 //PCB
+
+
+// #define BMP_ADDRESS_PCB 0x76
+
+// backup CO2 sensor
+// #define STC31_C_I2C_ADDR_2C 0x29 //PCB
+#define STC31_C_I2C_ADDR_2C 0x2C //(Protoboard)
+
 
 
 SensirionI2cStc3x co2STC31Sensor;
@@ -42,10 +46,10 @@ Adafruit_BMP3XX bmp;
 
 
 // Configure this for the location where rocket will launch. Check preassure in that city and change here
-#define SEALEVELPRESSURE_HPA (1031.9)
+#define SEALEVELPRESSURE_HPA (1007.0)
 bool debug = true;// false= wont print serial USE WHEN LAUNCHING, true = print on serial, USE WHEN TESTING
 
-int CLOSE_FILE_AFTER_ENTRIES =100; // 1000 for prod version
+int CLOSE_FILE_AFTER_ENTRIES =5; // 1000 for prod version
 
 // Beep every 2 minute to indicte that system is ON
 // Beeping ery minute does not give advantage(We can save battery by beeping in 2 minutes)
@@ -115,7 +119,8 @@ void setup() {
   // Because the file exists and we are recording the new data
   dataFile.println("Starting new data recording.");
  
-  if (!bmp.begin_I2C(BMP_ADDRESS_PCB)) {   // hardware I2C mode, can pass in address & alt Wire
+  // if (!bmp.begin_I2C(BMP_ADDRESS_PCB)) {   // (PCB) hardware I2C mode, can pass in address & alt Wire
+  if (!bmp.begin_I2C()){
     Serial.println("Could not find a valid BMP3 sensor, check wiring!");
     dataFile.println(String(ID_BMP)+"E:"+ "Could not connect in setup." );
     errorPreassureBMP = true;
@@ -149,7 +154,7 @@ void setup() {
   Serial.println("productId:"+String(productId));
   delay(10);
 
-  errorCo2STC31 = co2STC31Sensor.setBinaryGas(19 ); 
+  errorCo2STC31 = co2STC31Sensor.setBinaryGas(17);
   if (errorCo2STC31 != NO_ERROR_STC31_CO2) {
         Serial.print("STC31 Backup CO2: Error trying to execute setBinaryGas(): ");
         errorToString(errorCo2STC31, errorMessageCo2STC31, sizeof errorMessageCo2STC31);
@@ -172,7 +177,7 @@ void setup() {
   // With the set relative humidity command, the sensor uses the set humidity. 
     // in the gas model to compensate the concentration results
 
-  errorCo2STC31 = co2STC31Sensor.setRelativeHumidity(57.0);
+  errorCo2STC31 = co2STC31Sensor.setRelativeHumidity(82.0);
   if (errorCo2STC31 != NO_ERROR_STC31_CO2) {
       Serial.print("STC31 Backup CO2: Error trying to execute setRelativeHumidity(): ");
       errorToString(errorCo2STC31, errorMessageCo2STC31, sizeof errorMessageCo2STC31);
@@ -180,7 +185,8 @@ void setup() {
       dataFile.println(String(ID_BACKUP_CO2)+"E:"+ errorMessageCo2STC31 );
   }
  
-  if (co2MainSensor.begin(mainCO2_IICAddress) == false)
+  // if (co2MainSensor.begin(mainCO2_IICAddress) == false) //pcb
+  if (co2MainSensor.begin() == false)//(Protoboard)
   {
     Serial.println(F("Please check wiring. Co2 Sensor not detected."));
     dataFile.println(String(ID_MAIN_CO2)+"E:"+ "Could not connect in setup." );
@@ -198,10 +204,6 @@ void setup() {
   }
 
   Serial.println("SPIFFS memory connected , Oxygen sensor  and all I2c connect success !");
-  buzzerIt();
-  delay(1000);
-  buzzerIt();
-  delay(1000);
   buzzerIt();
   
 
@@ -271,9 +273,9 @@ void loop() {
   }
 
   // Write data to file
-  String newDataToLog= String(co2)+","+String(co2BackUpSTC31)+","+String(oxygenData)+","+String(altitude)+","+String(pressure)+"!";
+  String newDataToLog= String(co2)+","+String(co2BackUpSTC31*1000)+","+String(oxygenData)+","+String(altitude)+","+String(pressure)+"!";
   // If the data is exactly same from previous time, we do not save it on file.
-  if (!newDataToLog.equals(previousDataToLog)) {
+  // if (!newDataToLog.equals(previousDataToLog)) {
     dataFile.print(String(timePassed)+","+newDataToLog);
     // Save to compare next time.
     previousDataToLog =newDataToLog;
@@ -281,7 +283,7 @@ void loop() {
 
     // How many entries we have made
     entriesMade++;
-  }
+  // }
 
   // We close the file just as extra caution, we want to make sure the data we saved in file is not lost
   // Every CLOSE_FILE_AFTER_ENTRIES entries, we save the file and reopen it for appending
@@ -311,7 +313,7 @@ void loop() {
 
 void buzzerIt() {
   digitalWrite(BUZZER,HIGH);
-  delay(500);
+  delay(100);
   digitalWrite(BUZZER,LOW);
   
 }
