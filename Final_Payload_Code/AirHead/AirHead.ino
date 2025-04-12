@@ -46,9 +46,11 @@ Adafruit_BMP3XX bmp;
 
 
 // Configure this for the location where rocket will launch. Check preassure in that city and change here
-#define SEALEVELPRESSURE_HPA (1007.0)
+// Huntswille https://forecast.weather.gov/data/obhistory/KHSV.html  1018.8 
+#define SEALEVELPRESSURE_HPA (1018.6)
 bool debug = true;// false= wont print serial USE WHEN LAUNCHING, true = print on serial, USE WHEN TESTING
 
+// FIX: Save after every 5 entry so at max we only loose five entries
 int CLOSE_FILE_AFTER_ENTRIES =5; // 1000 for prod version
 
 // Beep every 2 minute to indicte that system is ON
@@ -209,7 +211,8 @@ void setup() {
 
   // We added this delay , so that when we first time format the file system we wait for new program with formatting disabled is uploaded in the hardware
   // The data loggin start after 30 seconds.
-  delay(30000);
+  // Fix: Remove 30 second delay in startup so we start collecting data after ststem restart.
+  //delay(30000);
 }
 
 void loop() {
