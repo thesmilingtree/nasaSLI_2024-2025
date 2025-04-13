@@ -7,7 +7,6 @@
 #include <Wire.h>
 
 // Import memory API
-//#include "FS.h"
 #include "SPIFFS.h"
 #include <EEPROM.h>//take
 
@@ -47,7 +46,9 @@ Adafruit_BMP3XX bmp;
 
 // Configure this for the location where rocket will launch. Check preassure in that city and change here
 // Huntswille https://forecast.weather.gov/data/obhistory/KHSV.html  1018.8 
-#define SEALEVELPRESSURE_HPA (1018.6)
+// Seattle https://forecast.weather.gov/data/obhistory/KSEA.html.  1028
+#define SEALEVELPRESSURE_HPA (1028)
+
 bool debug = true;// false= wont print serial USE WHEN LAUNCHING, true = print on serial, USE WHEN TESTING
 
 // FIX: Save after every 5 entry so at max we only loose five entries
@@ -175,10 +176,12 @@ void setup() {
       dataFile.println(String(ID_BACKUP_CO2)+"E:"+ errorMessageCo2STC31 );
   }
 
-
   // With the set relative humidity command, the sensor uses the set humidity. 
-    // in the gas model to compensate the concentration results
-
+  // in the gas model to compensate the concentration results
+  // Seattle https://www.weather.gov/wrh/timeseries?site=E7826  82%
+  // Huntsville https://forecast.weather.gov/MapClick.php?w3u=1&w6=rh&w13u=0&w14u=1&w15u=1&pqpfhr=24&AheadHour=107&Submit=Submit&FcstType=graphical&textField1=34.7304&textField2=-86.5861&site=all&unit=0&dd=&bw=  
+  //            10AM 68% 
+  
   errorCo2STC31 = co2STC31Sensor.setRelativeHumidity(82.0);
   if (errorCo2STC31 != NO_ERROR_STC31_CO2) {
       Serial.print("STC31 Backup CO2: Error trying to execute setRelativeHumidity(): ");
@@ -207,12 +210,6 @@ void setup() {
 
   Serial.println("SPIFFS memory connected , Oxygen sensor  and all I2c connect success !");
   buzzerIt();
-  
-
-  // We added this delay , so that when we first time format the file system we wait for new program with formatting disabled is uploaded in the hardware
-  // The data loggin start after 30 seconds.
-  // Fix: Remove 30 second delay in startup so we start collecting data after ststem restart.
-  //delay(30000);
 }
 
 void loop() {
